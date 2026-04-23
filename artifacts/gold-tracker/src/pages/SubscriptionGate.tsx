@@ -13,10 +13,10 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import type { User } from "firebase/auth";
+import type { AuthUser } from "@/lib/auth";
 
 interface Props {
-  user: User;
+  user: AuthUser;
   onLogout: () => void;
 }
 

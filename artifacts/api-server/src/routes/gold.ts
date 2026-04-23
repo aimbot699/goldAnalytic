@@ -1,5 +1,6 @@
 import { Router, type IRouter } from "express";
 import axios from "axios";
+import bcrypt from "bcryptjs";
 import { pool, initDB } from "../lib/mysql";
 
 const router: IRouter = Router();
@@ -46,24 +47,67 @@ router.get("/prices/daily-history", async (_req, res) => {
   }
 });
 
+router.post("/auth/register", async (req, res) => {
+  const { email, password } = req.body as { email?: string; password?: string };
+  if (!email || !password || password.length < 6)
+    return res.status(400).json({ error: "Email and password (min 6 chars) required" });
+  try {
+    const [existing] = await pool.query<any[]>(
+      "SELECT id FROM users WHERE email = ?",
+      [email],
+    );
+    if (existing.length > 0)
+      return res.status(409).json({ error: "Email already registered" });
+    const hash = await bcrypt.hash(password, 10);
+    await pool.query(
+      "INSERT INTO users (email, password, verified) VALUES (?, ?, ?)",
+      [email, hash, true],
+    );
+    await pool.query(
+      "INSERT IGNORE INTO subscriptions (email, active, planTitle) VALUES (?, ?, ?)",
+      [email, false, "Guest Protocol"],
+    );
+    return res.json({ success: true, email });
+  } catch (e: any) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+router.post("/auth/login", async (req, res) => {
+  const { email, password } = req.body as { email?: string; password?: string };
+  if (!email || !password)
+    return res.status(400).json({ error: "Email and password required" });
+  try {
+    const [rows] = await pool.query<any[]>(
+      "SELECT id, email, password FROM users WHERE email = ?",
+      [email],
+    );
+    if (rows.length === 0)
+      return res.status(401).json({ error: "Invalid email or password" });
+    const user = rows[0];
+    let ok = false;
+    if (user.password === "FIREBASE_AUTH") {
+      const hash = await bcrypt.hash(password, 10);
+      await pool.query("UPDATE users SET password = ? WHERE id = ?", [hash, user.id]);
+      ok = true;
+    } else {
+      ok = await bcrypt.compare(password, user.password);
+    }
+    if (!ok) return res.status(401).json({ error: "Invalid email or password" });
+    return res.json({ success: true, email: user.email });
+  } catch (e: any) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 router.post("/auth/sync", async (req, res) => {
   const { email } = req.body as { email?: string };
   if (!email) return res.status(400).json({ error: "email required" });
   try {
-    const [existing] = await pool.query<any[]>(
-      "SELECT * FROM users WHERE email = ?",
-      [email],
+    await pool.query(
+      "INSERT IGNORE INTO subscriptions (email, active, planTitle) VALUES (?, ?, ?)",
+      [email, false, "Guest Protocol"],
     );
-    if (existing.length === 0) {
-      await pool.query(
-        "INSERT INTO users (email, password, verified) VALUES (?, ?, ?)",
-        [email, "FIREBASE_AUTH", true],
-      );
-      await pool.query(
-        "INSERT IGNORE INTO subscriptions (email, active, planTitle) VALUES (?, ?, ?)",
-        [email, false, "Guest Protocol"],
-      );
-    }
     return res.json({ success: true });
   } catch (e: any) {
     return res.status(500).json({ error: e.message });

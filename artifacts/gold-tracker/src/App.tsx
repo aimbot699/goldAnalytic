@@ -29,13 +29,12 @@ import {
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
-import { auth, onAuthStateChanged, signOut } from "@/firebase";
-import type { User } from "firebase/auth";
 import Auth from "@/pages/Auth";
 import Admin from "@/pages/Admin";
 import SubscriptionGate from "@/pages/SubscriptionGate";
 import Payment from "@/pages/Payment";
 import { api } from "@/lib/api";
+import { useAuthUser, clearStoredUser, type AuthUser } from "@/lib/auth";
 
 interface Prices {
   usdPerGram: number;
@@ -51,7 +50,7 @@ interface Point {
 const GRAM_TO_BHORI = 11.664;
 const TROY_OUNCE_TO_GRAM = 31.1035;
 
-function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
+function Dashboard({ user, onLogout }: { user: AuthUser; onLogout: () => void }) {
   const [prices, setPrices] = useState<Prices>({
     usdPerGram: 0,
     bdtPerGram: 0,
@@ -207,7 +206,7 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
               <UserIcon size={14} color="#1a1300" />
             </div>
             <span style={{ fontSize: "0.85rem", fontWeight: 600 }}>
-              {user.displayName || user.email?.split("@")[0]}
+              {user.email?.split("@")[0]}
             </span>
             <ChevronDown size={14} color="#888" />
           </button>
@@ -646,12 +645,11 @@ function Dashboard({ user, onLogout }: { user: User; onLogout: () => void }) {
 }
 
 function Root() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loadingAuth, setLoadingAuth] = useState(true);
+  const user = useAuthUser();
   const [active, setActive] = useState(false);
   const [checking, setChecking] = useState(false);
 
-  const syncAndCheck = async (u: User | null) => {
+  const syncAndCheck = async (u: AuthUser | null) => {
     if (!u || !u.email) return;
     setChecking(true);
     try {
@@ -667,21 +665,17 @@ function Root() {
   };
 
   useEffect(() => {
-    const unsub = onAuthStateChanged(auth, async (u) => {
-      setUser(u);
-      if (u) await syncAndCheck(u);
-      setLoadingAuth(false);
-    });
-    return () => unsub();
-  }, []);
+    if (user) syncAndCheck(user);
+    else setActive(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.email]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    setUser(null);
+  const handleLogout = () => {
+    clearStoredUser();
     setActive(false);
   };
 
-  if (loadingAuth || checking) {
+  if (checking) {
     return (
       <div
         style={{

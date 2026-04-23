@@ -10,7 +10,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { auth } from "@/firebase";
+import { getStoredUser } from "@/lib/auth";
 import { api } from "@/lib/api";
 
 const plans: Record<string, { title: string; price: number }> = {
@@ -41,7 +41,7 @@ export default function Payment() {
 
     setLoading(true);
     try {
-      const user = auth.currentUser;
+      const user = getStoredUser();
       if (!user) throw new Error("Please log in again.");
       const r = await api.post("/orders", {
         email: user.email,

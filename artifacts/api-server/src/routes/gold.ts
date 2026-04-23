@@ -237,6 +237,56 @@ router.post("/admin/reject-order", async (req, res) => {
   }
 });
 
+async function getAdminPasswordHash(): Promise<string> {
+  const [rows] = await pool.query<any[]>(
+    "SELECT value FROM app_settings WHERE `key` = 'admin_password_hash' LIMIT 1",
+  );
+  if (rows.length > 0 && rows[0].value) return rows[0].value;
+  const hash = await bcrypt.hash("admin", 10);
+  await pool.query(
+    "INSERT INTO app_settings (`key`, value) VALUES ('admin_password_hash', ?) ON DUPLICATE KEY UPDATE value = ?",
+    [hash, hash],
+  );
+  return hash;
+}
+
+router.post("/admin/login", async (req, res) => {
+  const { password } = req.body as { password?: string };
+  if (!password) return res.status(400).json({ error: "Password required" });
+  try {
+    const hash = await getAdminPasswordHash();
+    const ok = await bcrypt.compare(password, hash);
+    if (!ok) return res.status(401).json({ error: "Incorrect access code" });
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+router.post("/admin/change-password", async (req, res) => {
+  const { currentPassword, newPassword } = req.body as {
+    currentPassword?: string;
+    newPassword?: string;
+  };
+  if (!currentPassword || !newPassword || newPassword.length < 4)
+    return res
+      .status(400)
+      .json({ error: "Current and new password (min 4 chars) required" });
+  try {
+    const hash = await getAdminPasswordHash();
+    const ok = await bcrypt.compare(currentPassword, hash);
+    if (!ok) return res.status(401).json({ error: "Current password is wrong" });
+    const newHash = await bcrypt.hash(newPassword, 10);
+    await pool.query(
+      "INSERT INTO app_settings (`key`, value) VALUES ('admin_password_hash', ?) ON DUPLICATE KEY UPDATE value = ?",
+      [newHash, newHash],
+    );
+    res.json({ success: true });
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post("/admin/toggle-sub", async (req, res) => {
   const { email, active } = req.body as { email: string; active: boolean };
   try {

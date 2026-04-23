@@ -28,6 +28,9 @@ export async function initDB(): Promise<void> {
     await pool.query(
       `CREATE TABLE IF NOT EXISTS price_history (id INT AUTO_INCREMENT PRIMARY KEY, price INT, recordedAt DATETIME DEFAULT CURRENT_TIMESTAMP)`,
     );
+    await pool.query(
+      `CREATE TABLE IF NOT EXISTS app_settings (\`key\` VARCHAR(64) PRIMARY KEY, value TEXT, updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP)`,
+    );
   } catch {
     // ignore init errors so server still serves health
   }

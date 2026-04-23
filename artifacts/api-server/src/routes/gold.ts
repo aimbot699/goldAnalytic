@@ -133,10 +133,39 @@ router.get("/subscription", async (req, res) => {
   }
 });
 
+router.get("/orders/mine", async (req, res) => {
+  const email = req.headers["x-user-email"] as string | undefined;
+  if (!email) return res.json([]);
+  try {
+    const [rows] = await pool.query<any[]>(
+      "SELECT planId, status FROM orders WHERE email = ? AND status IN ('pending','approved')",
+      [email],
+    );
+    res.json(rows);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 router.post("/orders", async (req, res) => {
   const { planId, planTitle, price, senderNumber, trxId, paymentMethod, email } =
     req.body as Record<string, string | number>;
+  if (!email || !planId)
+    return res.status(400).json({ error: "Missing required fields" });
   try {
+    const [dup] = await pool.query<any[]>(
+      "SELECT id, status FROM orders WHERE email = ? AND planId = ? AND status IN ('pending','approved') LIMIT 1",
+      [email, planId],
+    );
+    if (dup.length > 0) {
+      const status = dup[0].status;
+      return res.status(409).json({
+        error:
+          status === "approved"
+            ? "You already own this plan."
+            : "You already have a pending order for this plan. Please wait for verification.",
+      });
+    }
     await pool.query(
       "INSERT INTO orders (email, planId, planTitle, price, senderNumber, trxId, paymentMethod) VALUES (?, ?, ?, ?, ?, ?, ?)",
       [email, planId, planTitle, price, senderNumber, trxId, paymentMethod],

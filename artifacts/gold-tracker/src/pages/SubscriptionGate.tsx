@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   ShieldAlert,
   Phone,
@@ -10,19 +10,38 @@ import {
   Sparkles,
   Crown,
   Infinity as InfinityIcon,
+  Clock,
+  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import type { AuthUser } from "@/lib/auth";
+import { api } from "@/lib/api";
 
 interface Props {
   user: AuthUser;
   onLogout: () => void;
 }
 
+interface MyOrder {
+  planId: string;
+  status: string;
+}
+
 export default function SubscriptionGate({ user, onLogout }: Props) {
   const [open, setOpen] = useState(false);
+  const [myOrders, setMyOrders] = useState<MyOrder[]>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    api
+      .get<MyOrder[]>("/orders/mine", { headers: { "x-user-email": user.email } })
+      .then((r) => setMyOrders(r.data))
+      .catch(() => setMyOrders([]));
+  }, [user.email]);
+
+  const orderStatus = (planId: string) =>
+    myOrders.find((o) => o.planId === planId)?.status;
 
   const plans = [
     {
@@ -217,17 +236,20 @@ export default function SubscriptionGate({ user, onLogout }: Props) {
             gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
             gap: "1.5rem",
             marginBottom: "4rem",
+            paddingTop: 18,
           }}
         >
           {plans.map((p, i) => {
             const Icon = p.icon;
+            const status = orderStatus(p.id);
+            const disabled = !!status;
             return (
               <motion.div
                 key={p.id}
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -6 }}
+                whileHover={disabled ? {} : { y: -6 }}
                 className={p.popular ? "gold-card" : "glass-card"}
                 style={{
                   padding: "2rem",
@@ -238,26 +260,34 @@ export default function SubscriptionGate({ user, onLogout }: Props) {
                   boxShadow: p.popular
                     ? "0 0 60px hsla(45,95%,55%,0.18)"
                     : undefined,
+                  opacity: disabled ? 0.85 : 1,
+                  overflow: "visible",
                 }}
               >
                 {p.popular && (
                   <div
                     style={{
                       position: "absolute",
-                      top: -12,
+                      top: -14,
                       left: "50%",
                       transform: "translateX(-50%)",
+                      zIndex: 5,
+                      whiteSpace: "nowrap",
                     }}
                   >
                     <span
-                      className="badge badge-gold"
+                      className="badge"
                       style={{
-                        background: "linear-gradient(135deg, hsl(var(--gold-bright)), hsl(var(--gold-deep)))",
+                        background:
+                          "linear-gradient(135deg, hsl(var(--gold-bright)), hsl(var(--gold-deep)))",
                         color: "#1a1300",
                         border: "none",
+                        boxShadow: "0 6px 18px hsla(45,95%,55%,0.45)",
+                        padding: "0.4rem 0.95rem",
+                        fontSize: "0.68rem",
                       }}
                     >
-                      MOST POPULAR
+                      ★ MOST POPULAR
                     </span>
                   </div>
                 )}
@@ -319,13 +349,47 @@ export default function SubscriptionGate({ user, onLogout }: Props) {
                   ))}
                 </ul>
 
-                <button
-                  onClick={() => navigate(`/payment?plan=${p.id}`)}
-                  className={p.popular ? "primary-btn" : "ghost-btn"}
-                  style={{ width: "100%" }}
-                >
-                  Choose {p.title}
-                </button>
+                {disabled ? (
+                  <button
+                    disabled
+                    className="ghost-btn"
+                    style={{
+                      width: "100%",
+                      cursor: "not-allowed",
+                      opacity: 0.85,
+                      background:
+                        status === "approved"
+                          ? "hsla(142,70%,45%,0.1)"
+                          : "hsla(45,95%,55%,0.08)",
+                      borderColor:
+                        status === "approved"
+                          ? "hsla(142,70%,45%,0.4)"
+                          : "var(--gold-border)",
+                      color:
+                        status === "approved"
+                          ? "hsl(142,70%,55%)"
+                          : "hsl(var(--gold))",
+                    }}
+                  >
+                    {status === "approved" ? (
+                      <>
+                        <CheckCircle2 size={15} /> Active
+                      </>
+                    ) : (
+                      <>
+                        <Clock size={15} /> Awaiting verification
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => navigate(`/payment?plan=${p.id}`)}
+                    className={p.popular ? "primary-btn" : "ghost-btn"}
+                    style={{ width: "100%" }}
+                  >
+                    Choose {p.title}
+                  </button>
+                )}
               </motion.div>
             );
           })}

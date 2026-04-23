@@ -1,27 +1,31 @@
-# Workspace
+# Gold Live Analytic — Bangladesh Gold Price Tracker
 
 ## Overview
+Premium gold-rate dashboard for Bangladesh with Firebase auth, MySQL backend, bKash/Nagad subscription payments, and admin panel.
 
-pnpm workspace monorepo using TypeScript. Each package manages its own dependencies.
+## Architecture
+- **Frontend**: `artifacts/gold-tracker/` — React + Vite + TypeScript, served at `/`
+  - `src/App.tsx` — Router + Dashboard (live prices, 24h chart, karat table, valuation calculator)
+  - `src/pages/Auth.tsx` — Firebase email/Google login
+  - `src/pages/SubscriptionGate.tsx` — Plan selection (Monthly ৳60 / Yearly ৳400 / Lifetime ৳2000)
+  - `src/pages/Payment.tsx` — bKash/Nagad TrxID submission
+  - `src/pages/Admin.tsx` — Order/user management (passcode: `admin`, route `/admin`)
+  - `src/firebase.ts` — Firebase auth (project goldbazarrate)
+  - `src/lib/api.ts` — axios baseURL `/api`
+- **Backend**: `artifacts/api-server/` — Express, all routes under `/api`
+  - `src/lib/mysql.ts` — MySQL pool to existing DB at 91.99.159.222
+  - `src/routes/gold.ts` — auth/sync, subscription, orders, admin, daily-history
+- **Live prices**: Polled client-side every 10s from `gold-api.com` + `er-api.com`; backend records to `price_history` table every 30 min.
 
-## Stack
+## Database (DO NOT MODIFY SCHEMA)
+Production MySQL — already populated with users, subscriptions, orders, price_history. Connection details hardcoded in `lib/mysql.ts` as defaults; can be overridden via `MYSQL_*` env vars.
 
-- **Monorepo tool**: pnpm workspaces
-- **Node.js version**: 24
-- **Package manager**: pnpm
-- **TypeScript version**: 5.9
-- **API framework**: Express 5
-- **Database**: PostgreSQL + Drizzle ORM
-- **Validation**: Zod (`zod/v4`), `drizzle-zod`
-- **API codegen**: Orval (from OpenAPI spec)
-- **Build**: esbuild (CJS bundle)
+## Design System
+- Premium dark theme with goldenrod accents, glassmorphism cards, Cormorant Garamond serif headings, Outfit sans-serif body.
+- Live pulse indicator on header logo when prices update.
 
-## Key Commands
+## Visual Editing Compatibility
+Pages use a mix of inline styles and CSS classes (`.glass-card`, `.gold-card`, `.gold-text`, `.primary-btn`, `.ghost-btn`, etc.) defined in `src/index.css`.
 
-- `pnpm run typecheck` — full typecheck across all packages
-- `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- `pnpm --filter @workspace/api-server run dev` — run API server locally
-
-See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details.
+## Recent Changes
+- 2026-04-23: Initial port from RAR archive — converted JSX → TSX, replaced hardcoded localhost API URLs with relative `/api`, applied premium polish while preserving original layout/feature set.

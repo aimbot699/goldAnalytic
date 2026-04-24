@@ -4,6 +4,12 @@ import pinoHttp from "pino-http";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app: Express = express();
 
 app.use(
@@ -30,5 +36,17 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
+
+// Serve frontend static files
+const frontendPath = path.resolve(__dirname, "../../gold-tracker/dist/public");
+app.use(express.static(frontendPath));
+
+// Catch-all for SPA
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api")) {
+    return next();
+  }
+  res.sendFile(path.join(frontendPath, "index.html"));
+});
 
 export default app;

@@ -1,0 +1,24 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080
+      # These default to the values in artifacts/api-server/src/lib/mysql.ts
+      # if not provided here.
+      - MYSQL_HOST=91.99.159.222
+      - MYSQL_USER=u30197_5NaUGTXiBa
+      - MYSQL_PASSWORD=7xo4nT4eFLBcs@3C+TkVQm.c
+      - MYSQL_DATABASE=s30197_aimbot
+    restart: always
+
+# Optional: If you want to run a local MySQL database instead:
+#  db:
+#    image: mysql:8
+#    environment:
+#      MYSQL_ROOT_PASSWORD: root
+#      MYSQL_DATABASE: gold_tracker
+#    ports:
+#      - "3306:3306"

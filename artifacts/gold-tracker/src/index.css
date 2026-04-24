@@ -317,6 +317,10 @@ input:focus, select:focus, textarea:focus {
 
 .span-full { grid-column: 1 / -1; }
 
+@media (max-width: 760px) {
+  .valuation-grid { grid-template-columns: 1fr !important; }
+}
+
 table { width: 100%; border-collapse: collapse; }
 table th { padding: 1rem; font-weight: 700; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em; color: hsl(var(--gold)); text-align: left; border-bottom: 1px solid var(--gold-border); }
 table td { padding: 1.1rem 1rem; border-bottom: 1px solid var(--glass-border); font-size: 0.92rem; }

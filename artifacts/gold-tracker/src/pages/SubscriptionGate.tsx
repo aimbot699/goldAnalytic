@@ -108,21 +108,19 @@ export default function SubscriptionGate({ user, onLogout }: Props) {
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <div
             style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: "linear-gradient(135deg, hsl(var(--gold-bright)), hsl(var(--gold-deep)))",
+              width: 40,
+              height: 40,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              boxShadow: "0 0 20px hsla(45,95%,55%,0.4)",
+              filter: "drop-shadow(0 0 8px hsla(45,95%,55%,0.4))",
             }}
           >
-            <Sparkles size={18} color="#1a1300" />
+            <img src="/logo.png" alt="Logo" style={{ width: "100%", height: "100%", objectFit: "contain" }} />
           </div>
           <div>
             <h1 style={{ fontSize: "1.05rem", fontWeight: 800 }}>
-              Gold Live Analytic
+              GOLDBAZARPRICE GOLD ANALYTIC
             </h1>
             <span
               style={{
@@ -430,7 +428,7 @@ export default function SubscriptionGate({ user, onLogout }: Props) {
                   <p style={{ fontSize: "0.65rem", color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                     Mobile
                   </p>
-                  <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>+880 1811-565554</p>
+                  <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>01616685710</p>
                 </div>
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -439,7 +437,7 @@ export default function SubscriptionGate({ user, onLogout }: Props) {
                   <p style={{ fontSize: "0.65rem", color: "#888", textTransform: "uppercase", letterSpacing: "0.1em" }}>
                     Email
                   </p>
-                  <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>support@goldlive.bd</p>
+                  <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>arpitsarkern@gmail.com</p>
                 </div>
               </div>
             </div>

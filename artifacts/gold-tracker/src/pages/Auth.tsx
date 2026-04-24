@@ -58,7 +58,7 @@ export default function Auth({ onLogin }: AuthProps) {
               boxShadow: "0 0 40px hsla(45,95%,55%,0.2)",
             }}
           >
-            <ShieldCheck size={34} color="hsl(45 95% 55%)" />
+            <img src="/logo.png" alt="Logo" style={{ width: "60%", height: "60%", objectFit: "contain" }} />
           </div>
           <h1 className="serif" style={{ fontSize: "2.2rem", marginBottom: 6 }}>
             {isLogin ? "Welcome back" : "Create account"}

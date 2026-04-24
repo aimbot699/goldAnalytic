@@ -7,7 +7,7 @@ const router: IRouter = Router();
 
 initDB();
 
-async function recordPrice(): Promise<void> {
+export async function recordPrice(): Promise<void> {
   try {
     const gRes = await axios.get<{ price: number }>(
       "https://api.gold-api.com/price/XAU",

@@ -5,6 +5,8 @@
 [build.environment]
   NODE_VERSION = "22"
   PNPM_FLAGS = "--frozen-lockfile"
+  PORT = "8080"
+  BASE_PATH = "/"
 
 [[redirects]]
   from = "/api/*"

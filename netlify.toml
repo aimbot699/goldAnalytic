@@ -1,0 +1,17 @@
+[build]
+  command = "pnpm --filter @workspace/gold-tracker run build"
+  publish = "artifacts/gold-tracker/dist/public"
+
+[build.environment]
+  NODE_VERSION = "22"
+  PNPM_FLAGS = "--frozen-lockfile"
+
+[[redirects]]
+  from = "/api/*"
+  to = "http://your-backend-url/api/:splat"
+  status = 200
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
